@@ -1,35 +1,47 @@
-diff --git a/csrc/dispatch_ffn_combine/op_kernel/utils/const_args.hpp b/csrc/dispatch_ffn_combine/op_kernel/utils/const_args.hpp
-index 84cb6c4e..148eddb5 100644
---- a/csrc/dispatch_ffn_combine/op_kernel/utils/const_args.hpp
-+++ b/csrc/dispatch_ffn_combine/op_kernel/utils/const_args.hpp
-@@ -5,5 +5,6 @@ constexpr static uint64_t MB_SIZE = 1024 * 1024UL;
- constexpr static int32_t NUMS_PER_FLAG = 16;
- constexpr static int32_t CACHE_LINE = 512;
- constexpr static int32_t RESET_VAL = 0xffff;
--constexpr static int32_t ALIGN_128 = 128;
-+constexpr static int32_t FLAGSTRIDE = 16;
-+constexpr static int32_t UB_ALIGN = 32;
- #endif
-\ No newline at end of file
-root@localhost:/home/l30063409/code/0128/vllm-ascend# git diff  csrc/dispatch_ffn_combine/op_kernel/utils/dispatch_policy_custom.hpp
-diff --git a/csrc/dispatch_ffn_combine/op_kernel/utils/dispatch_policy_custom.hpp b/csrc/dispatch_ffn_combine/op_kernel/utils/dispatch_policy_custom.hpp
-index 31fdbad1..e88a1340 100644
---- a/csrc/dispatch_ffn_combine/op_kernel/utils/dispatch_policy_custom.hpp
-+++ b/csrc/dispatch_ffn_combine/op_kernel/utils/dispatch_policy_custom.hpp
-@@ -33,13 +33,13 @@ namespace Catlass::Epilogue {
-     };
+#ifndef DISPATH_POLICY_CUSTOM_HPP
+#define DISPATH_POLICY_CUSTOM_HPP
 
-     template <uint32_t UB_STAGES_>
--    struct EpilogueAtlasA2PerTokenDequantQuant {
-+    struct EpilogueAtlasA2PerTokenDequantSwigluQuant {
-         using ArchTag = Arch::AtlasA2;
-         static constexpr uint32_t UB_STAGES = UB_STAGES_;
-     };
--
-+
-     template <uint32_t UB_STAGES_>
--    struct EpilogueAtlasA2PerTokenDequantSwigluQuant {
-+    struct EpilogueAtlasA2PerTokenDequantV2 {
-         using ArchTag = Arch::AtlasA2;
-         static constexpr uint32_t UB_STAGES = UB_STAGES_;
-     };
+namespace Catlass::Gemm {
+    template <bool ENABLE_UNIT_FLAG_ = false, bool ENABLE_SHUFFLE_K_ = false>
+    struct MmadAtlasA2PreloadFixpipeQuant : public MmadAtlasA2 {
+        static constexpr uint32_t STAGES = 2;
+        static constexpr bool ENABLE_UNIT_FLAG = ENABLE_UNIT_FLAG_;
+        static constexpr bool ENABLE_SHUFFLE_K = ENABLE_SHUFFLE_K_;
+    };
+
+    template <uint32_t PRELOAD_STAGES_, uint32_t L1_STAGES_, uint32_t L0A_STAGES_, uint32_t L0B_STAGES_,
+        uint32_t L0C_STAGES_, bool ENABLE_UNIT_FLAG_, bool ENABLE_SHUFFLE_K_>
+    struct MmadAtlasA2PreloadAsyncFixpipe :
+        public MmadAtlasA2PreloadAsync<
+            PRELOAD_STAGES_,
+            L1_STAGES_, 
+            L0A_STAGES_,
+            L0B_STAGES_,
+            L0C_STAGES_,
+            ENABLE_UNIT_FLAG_,
+            ENABLE_SHUFFLE_K_
+        > {
+    };
+}
+
+namespace Catlass::Epilogue {
+        
+    template <uint32_t UB_STAGES_>
+    struct EpilogueAtlasA2UnQuant {
+        using ArchTag = Arch::AtlasA2;
+        static constexpr uint32_t UB_STAGES = UB_STAGES_;
+    };
+
+    template <uint32_t UB_STAGES_>
+    struct EpilogueAtlasA2PerTokenDequantSwigluQuant {
+        using ArchTag = Arch::AtlasA2;
+        static constexpr uint32_t UB_STAGES = UB_STAGES_;
+    };
+
+    template <uint32_t UB_STAGES_>
+    struct EpilogueAtlasA2PerTokenDequantV2 {
+        using ArchTag = Arch::AtlasA2;
+        static constexpr uint32_t UB_STAGES = UB_STAGES_;
+    };
+}
+#endif // DISPATH_POLICY_CUSTOM_HPP
