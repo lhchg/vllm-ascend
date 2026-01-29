@@ -1,5 +1,5 @@
 diff --git a/csrc/dispatch_ffn_combine/op_kernel/dispatch_ffn_combine.cpp b/csrc/dispatch_ffn_combine/op_kernel/dispatch_ffn_combine.cpp
-index db3cf771..e395a87f 100644
+index db3cf771..24c1b9f3 100644
 --- a/csrc/dispatch_ffn_combine/op_kernel/dispatch_ffn_combine.cpp
 +++ b/csrc/dispatch_ffn_combine/op_kernel/dispatch_ffn_combine.cpp
 @@ -23,29 +23,11 @@ extern "C" __global__ __aicore__ void dispatch_ffn_combine(GM_ADDR x, GM_ADDR w1
@@ -31,6 +31,7 @@ index db3cf771..e395a87f 100644
 -        DispatchFFNCombine<int8_t, DTYPE_W1, DTYPE_OUT, true, true> op;
 -        op.Init(x, w1, w2, expertId, scale1, scale2, probs, c, workspaceGM, tilingGM);
 -        op.Process();
--    }
-+    }
- }
+     }
+-}
+\ No newline at end of file
++}
