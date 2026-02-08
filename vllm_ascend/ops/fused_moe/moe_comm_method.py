@@ -52,6 +52,7 @@ def setup_moe_comm_method(moe_config):
     _MoECommMethods[MoECommType.MC2] = MC2CommImpl(moe_config)
     _MoECommMethods[MoECommType.FUSED_MC2] = FusedMC2CommImpl(moe_config)
 
+COUNT=0
 
 def set_gmmswigluquant_method():
     from vllm_ascend.ascend_config import get_ascend_config
@@ -82,6 +83,7 @@ class MoECommMethod(ABC):
         self.token_dispatcher = self._get_token_dispatcher()
         self.prepare_finalize = self._get_prepare_finalize()
         self.use_fusion_ops = set_gmmswigluquant_method()
+        self.count = 0
 
     def prepare(
         self,
@@ -319,6 +321,21 @@ class FusedMC2CommImpl(MoECommMethod):
         if envs_ascend.VLLM_ASCEND_ENABLE_FUSED_MC2 == 1:
             out = torch.empty_like(hidden_states)
             expert_token_nums = torch.zeros([self.moe_config.num_local_experts], dtype=torch.int32)
+
+            global G_COUNT
+
+            COUNT1 = 59
+            COUNT2 = 80 # 可自定义dump第几层到第几层
+            if COUNT1 <= self.count <= COUNT2:
+                rank = torch.distributed.get_rank()
+                torch.save(hidden_states.clone(), f"rank-{rank}-{self.count}-hidden_states.pt")
+                torch.save(w1[0].clone(), f"rank-{rank}-{self.count}-weight1.pt")
+                torch.save(w2[0].clone(), f"rank-{rank}-{self.count}-weight2.pt")
+                torch.save(w1_scale[0].clone(), f"rank-{rank}-{self.count}-w1_scale.pt")
+                torch.save(w2_scale[0].clone(), f"rank-{rank}-{self.count}-w2_scale.pt")
+                torch.save(topk_ids.clone(), f"rank-{rank}-{self.count}-expert_idx.pt")
+                torch.save(topk_weights.clone(), f"rank-{rank}-{self.count}-probs.pt")
+
             torch.ops._C_ascend.dispatch_ffn_combine(  # type: ignore
                 x=hidden_states,
                 weight1=w1,
@@ -333,6 +350,10 @@ class FusedMC2CommImpl(MoECommMethod):
                 expert_token_nums=expert_token_nums,
             )
             expert_tokens = expert_token_nums
+
+            if COUNT1 <= self.count <= COUNT2:
+                torch.save(out.clone(), f"rank-{rank}-{self.count}-out.pt")
+
         elif envs_ascend.VLLM_ASCEND_ENABLE_FUSED_MC2 == 2:
             assert expert_map is not None, "expert_map cannot be None."
             group_list_type = 1
@@ -353,4 +374,6 @@ class FusedMC2CommImpl(MoECommMethod):
             )
         else:
             raise ValueError(f"Wrong value of {envs_ascend.VLLM_ASCEND_ENABLE_FUSED_MC2=}")
+        COUNT += 1
+        self.count += 1
         return FusedExpertsResult(routed_out=out, group_list_type=group_list_type, expert_tokens=expert_tokens)
