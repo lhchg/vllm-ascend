@@ -1,0 +1,13 @@
+global G_COUNT^M
+
+# COUNT1 = 59^M
+# COUNT2 = 80^M
+# if COUNT1 <= self.count <= COUNT2:^M
+#     rank = torch.distributed.get_rank()^M
+#     torch.save(hidden_states.clone(), f"rank-{rank}-{self.count}-hidden_states.pt")^M
+#     torch.save(w1.clone(), f"rank-{rank}-{self.count}-weight1.pt")^M
+#     torch.save(w2.clone(), f"rank-{rank}-{self.count}-weight2.pt")^M
+#     torch.save(w1_scale.clone(), f"rank-{rank}-{self.count}-w1_scale.pt")^M
+#     torch.save(w2_scale.clone(), f"rank-{rank}-{self.count}-w2_scale.pt")^M
+#     torch.save(topk_ids.clone(), f"rank-{rank}-{self.count}-expert_idx.pt")^M
+#     torch.save(topk_weights.clone(), f"rank-{rank}-{self.count}-probs.pt")^M
