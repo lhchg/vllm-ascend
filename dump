@@ -11,3 +11,11 @@ global G_COUNT^M
 #     torch.save(w2_scale.clone(), f"rank-{rank}-{self.count}-w2_scale.pt")^M
 #     torch.save(topk_ids.clone(), f"rank-{rank}-{self.count}-expert_idx.pt")^M
 #     torch.save(topk_weights.clone(), f"rank-{rank}-{self.count}-probs.pt")^M
+
+
+https://arxiv.org/abs/2412.19437
+https://arxiv.org/pdf/2211.05102
+https://chenmeng.blog/posts/mixtral-8x7b-moe%E6%A8%A1%E5%9E%8B%E7%AC%94%E8%AE%B0/
+https://arxiv.org/html/2405.17927v1
+https://arxiv.org/pdf/2308.00951
+https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/
